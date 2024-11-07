@@ -9,56 +9,80 @@ from preprocesamiento.ProcesadorTexto import ProcesadorTexto
 from posprocesador.FastText import FastText
 from model.LSTM import ModeloLSTM
 from sklearn.model_selection import train_test_split
+import fasttext
 
 RUTA_DATASET = '../data/dataset.xlsx'
 
 class ChatBot():
-    EPOCAS = 300
-    DIMENCION_EMBEDDING = 80
-    UNIDADES = 250
+    EPOCAS = 500
+    FACTOR_APRENDIZAJE = 0.01
+    DIMENSION_EMBEDDING = 128
+    UNIDADES = 256
     TAM_LOTE = 32
-    VALIDACION = 0.2
-    
-    def __init__(self):
-        self.fast_text = FastText()
+    VALIDACION = 0.1
+    TAM_PRUEBA = 0.2
+    ESTADO_ALEATORIO = 42
+
+    def cargarFastText(self, preguntas, respuestas, preprocesador):
+        fast_text = FastText(preprocesador=preprocesador, tam_embedding=self.DIMENSION_EMBEDDING)
         
-    def cargarFastText(self):
-        return
+        with open(fast_text.RUTA_ARCHIVO_PREGUNTAS, 'w', encoding='utf-8') as f:
+            for d in preguntas: f.write(f'{d}\n')
+        with open(fast_text.RUTA_ARCHIVO_RESPUESTAS, 'w', encoding='utf-8') as f:
+            for d in respuestas: f.write(f'{d}\n')
+            
+        modelo_preguntas = fasttext.train_unsupervised(input='./preguntas.txt', model='skipgram', dim=self.DIMENSION_EMBEDDING)
+        modelo_respuestas = fasttext.train_unsupervised(input='./respuestas.txt', model='skipgram', dim=self.DIMENSION_EMBEDDING)
+        
+        fast_text.fijaModelo(modelo_preguntas, 'pregunta')
+        fast_text.fijaModelo(modelo_respuestas, 'respuesta')
+        fast_text.crearEmbedding('pregunta')
+        fast_text.crearEmbedding('respuesta')
+        return fast_text
     
-    def cargar(self):
-        preprocesador = ProcesadorTexto(RUTA_DATASET)
-        preguntas, respuesta = preprocesador.cargar('USUARIO', 'ASISTENTE')
+    def leerDatos(self):
+        self.preprocesador = ProcesadorTexto(RUTA_DATASET)
+        preguntas, respuestas = self.preprocesador.cargar('USUARIO', 'ASISTENTE')
 
         _, self.preguntas_test, _, self.respuesta_test = train_test_split(
             preguntas, 
-            respuesta, 
-            test_size=0.2, 
-            random_state=42
+            respuestas, 
+            test_size=self.TAM_PRUEBA, 
+            random_state=self.ESTADO_ALEATORIO
         )
+        return preguntas, respuestas
+    
+    def cargar(self):
+        preguntas, respuestas = self.leerDatos()
         
-        if(not preprocesador.cargarTokenizer()): preprocesador.guardar()
+        if(not self.preprocesador.cargarTokenizer()): self.preprocesador.guardar()
         # else existe el archivo con los tokenizer correspondiente
-        preprocesador.entrenar()
-        tam_vocabulario_preguntas = len(preprocesador.obtenerIndicesPalabras('pregunta')) + 1 
-        tam_vocabulario_respuestas = len(preprocesador.obtenerIndicesPalabras('respuesta')) + 1
-        tam_max = preprocesador.obtenerMaxTamSecuencia('vocabulario') # palabras max. sin repetir entre preguntas y respuestas
-
-        modeloLSTM = ModeloLSTM(self.DIMENCION_EMBEDDING, self.UNIDADES, self.TAM_LOTE, self.VALIDACION)
-        if(not modeloLSTM.construirModelo(tam_vocabulario_preguntas, tam_max, tam_vocabulario_respuestas)):
-            preguntas_train, _, respuesta_train, _ = train_test_split(
-                preprocesador.obtenerSecuencias('pregunta'), 
-                preprocesador.obtenerSecuencias('respuesta'), 
-                test_size=0.2, 
-                random_state=42
-            )
-            X = preguntas_train
-            y = np.expand_dims(respuesta_train, axis=-1)
-            modeloLSTM.entrenar(X, y, self.EPOCAS)
-        # else existe un archivo con el modelo entrenado
+        self.preprocesador.entrenar()
+        tam_vocabulario_preguntas = len(self.preprocesador.obtenerIndicesPalabras('pregunta')) + 1 
+        tam_vocabulario_respuestas = len(self.preprocesador.obtenerIndicesPalabras('respuesta')) + 1
+        tam_max = self.preprocesador.obtenerMaxTamSecuencia('vocabulario') # palabras max. sin repetir entre preguntas y respuestas
         
-        self.tam_max = tam_max
-        self.modeloLSTM = modeloLSTM
-        self.preprocesador = preprocesador
+        self.fast_text = self.cargarFastText(preguntas, respuestas, self.preprocesador)
+
+        self.modeloLSTM = ModeloLSTM(
+            factor_aprendizaje=self.FACTOR_APRENDIZAJE,
+            dim_embedding=self.DIMENSION_EMBEDDING, 
+            unidades=self.UNIDADES, 
+            tam_lote=self.TAM_LOTE, 
+            validacion=self.VALIDACION,
+            fasttext=self.fast_text
+        )
+        if(
+            not self.modeloLSTM.construirModelo(
+                tam_vocabulario_preguntas, 
+                tam_max, 
+                tam_vocabulario_respuestas
+            )
+        ):
+            X = self.preprocesador.obtenerSecuencias('pregunta')
+            y = np.expand_dims(self.preprocesador.obtenerSecuencias('respuesta'), axis=-1)
+            self.modeloLSTM.entrenar(X, y, self.EPOCAS)
+        # else existe un archivo con el modelo entrenado
     
     def procesar(self, pregunta:str = ''):
         pregunta_pad = self.preprocesador.adaptarPregunta(pregunta)
@@ -72,7 +96,8 @@ class ChatBot():
         for pregunta in self.preguntas_test:
             print(self.procesar(pregunta))
             print('\n')
-
+        
 chat_bot = ChatBot()
 chat_bot.cargar()
-chat_bot.evaluar()
+print(chat_bot.procesar('¿tienes algún nombre?'))
+# chat_bot.evaluar()

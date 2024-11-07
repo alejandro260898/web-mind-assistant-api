@@ -6,7 +6,7 @@ from keras_preprocessing.text import Tokenizer
 from keras_preprocessing.sequence import pad_sequences
 
 class ProcesadorTexto():
-    FILTRO = '!"#$%&()*+,-./:;<=>?@[\\]^`{|}~'
+    FILTRO = '"#$%&()*+-/:;<=>@[\\]^`{|}~'
     TOKEN_DESCONOCIDO = '<UNK>'
     MODO_PADDING = 'post'
     RUTA_TOKENIZER_PREGUNTAS = './tokenizer_preguntas.pkl'
@@ -73,31 +73,22 @@ class ProcesadorTexto():
         )
         
 
-    def obtenerSecuencias(self, tipo = 'pregunta') -> np.ndarray:
-        if(tipo == 'pregunta'):
-            return self.secuencias_preguntas_padded
-        else:
-            return self.secuencias_respuestas_padded
+    def obtenerSecuencias(self, tipo:str = 'pregunta') -> np.ndarray:
+        if(tipo == 'pregunta'): return self.secuencias_preguntas_padded
+        else: return self.secuencias_respuestas_padded
     
-    def obtenerMaxTamSecuencia(self, tipo = 'pregunta'):
-        if(tipo == 'pregunta'):
-            return self.max_len_preguntas
-        elif(tipo == 'respuesta'):
-            return self.max_len_respuestas
-        else:
-            return self.max_len_vocabulario
+    def obtenerMaxTamSecuencia(self, tipo:str = 'pregunta'):
+        if(tipo == 'pregunta'): return self.max_len_preguntas
+        elif(tipo == 'respuesta'): return self.max_len_respuestas
+        else: return self.max_len_vocabulario
     
-    def obtenerIndicesPalabras(self, tipo = 'pregunta'):
-        if(tipo == 'pregunta'):
-            return self.tokenizer_pregunta.index_word
-        else:
-            return self.tokenizer_respuesta.index_word
+    def obtenerIndicesPalabras(self, tipo:str = 'pregunta'):
+        if(tipo == 'pregunta'): return self.tokenizer_pregunta.index_word
+        else: return self.tokenizer_respuesta.index_word
         
-    def obtenerPalabrasIndices(self, tipo = 'pregunta'):
-        if(tipo == 'pregunta'):
-            return self.tokenizer_pregunta.word_index
-        else:
-            return self.tokenizer_respuesta.word_index
+    def obtenerPalabrasIndices(self, tipo:str = 'pregunta'):
+        if(tipo == 'pregunta'): return self.tokenizer_pregunta.word_index
+        else: return self.tokenizer_respuesta.word_index
         
     def adaptarPregunta(self, pregunta:str = ''):
         secuencia = self.tokenizer_pregunta.texts_to_sequences([pregunta])

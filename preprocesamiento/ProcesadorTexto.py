@@ -6,16 +6,16 @@ from keras_preprocessing.text import Tokenizer
 from keras_preprocessing.sequence import pad_sequences
 
 class ProcesadorTexto():
-    FILTRO = '"#$%&()*+-/:;<=>@[\\]^`{|}~'
+    FILTRO_RESPUESTA = '"#$%&()*+-/:;<=>@[\\]^`{|}~'
     TOKEN_DESCONOCIDO = '<UNK>'
     MODO_PADDING = 'post'
-    RUTA_TOKENIZER_PREGUNTAS = './tokenizer_preguntas.pkl'
-    RUTA_TOKENIZER_RESPUESTAS = './tokenizer_respuestas.pkl'
+    RUTA_TOKENIZER_PREGUNTAS = '../data/tokenizer_preguntas.pkl'
+    RUTA_TOKENIZER_RESPUESTAS = '../data/tokenizer_respuestas.pkl'
     
     def __init__(self, rutaDataset = ''):
         self.rutaDataset = rutaDataset
-        self.tokenizer_pregunta = Tokenizer(filters=self.FILTRO, oov_token=self.TOKEN_DESCONOCIDO)
-        self.tokenizer_respuesta = Tokenizer(filters=self.FILTRO, oov_token=self.TOKEN_DESCONOCIDO)
+        self.tokenizer_pregunta = Tokenizer(oov_token=self.TOKEN_DESCONOCIDO)
+        self.tokenizer_respuesta = Tokenizer(filters=self.FILTRO_RESPUESTA, oov_token=self.TOKEN_DESCONOCIDO)
         
     def cargarTokenizer(self):
         ruta_preguntas = Path(self.RUTA_TOKENIZER_PREGUNTAS)

@@ -3,8 +3,8 @@ import numpy as np
 from preprocesamiento.ProcesadorTexto import ProcesadorTexto
 
 class FastText:
-    RUTA_ARCHIVO_PREGUNTAS = './preguntas.txt'
-    RUTA_ARCHIVO_RESPUESTAS = './respuestas.txt'
+    RUTA_ARCHIVO_PREGUNTAS = '../data/preguntas.txt'
+    RUTA_ARCHIVO_RESPUESTAS = '../data/respuestas.txt'
     
     def __init__(self, preprocesador:ProcesadorTexto, tam_embedding:int = 100):
         self.preprocesador = preprocesador

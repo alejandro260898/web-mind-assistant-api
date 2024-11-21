@@ -2,12 +2,12 @@ import numpy as np
 from pathlib import Path
 from posprocesador.FastText import FastText
 from keras.api.models import Sequential, load_model
-from keras.api.layers import Embedding, LSTM, Dense
+from keras.api.layers import Embedding, LSTM, Dense, TimeDistributed
 from keras.api.optimizers import Adam
 from keras.api.callbacks import ReduceLROnPlateau
 
 class ModeloLSTM():
-    NOM_ARCHIVO = './modelo_lstm.h5'
+    NOM_ARCHIVO = '../data/modelo_lstm.h5'
     
     def __init__(
         self, 
@@ -42,27 +42,16 @@ class ModeloLSTM():
                 )
             )
             self.model.add(LSTM(self.UNIDADES, return_sequences=True))
-            # self.model.add(LSTM(self.UNIDADES, return_sequences=False))
             self.model.add(Dense(tam_vocabulario_salida, activation='softmax'))
-            optimizer = Adam(learning_rate=self.FACTOR_APRENDIZAJE)
-            self.model.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer)
+            self.model.compile(loss='sparse_categorical_crossentropy', optimizer=Adam(learning_rate=self.FACTOR_APRENDIZAJE))
             return False
         
     def entrenar(self, X:np.ndarray, y:np.ndarray, epocas:int = 50):
-        reduce_lr = ReduceLROnPlateau(
-            monitor='val_loss',
-            factor=0.5,
-            patience=2,
-            min_lr=1e-6,
-            verbose=1
-        )
-        
         res = self.model.fit(
             X, y, 
-            epochs=epocas, 
-            callbacks=[reduce_lr],
             batch_size=self.TAM_LOTE, 
-            # validation_split=self.VALIDACION,
+            epochs=epocas, 
+            validation_split=self.VALIDACION
         )
         self.model.save(self.NOM_ARCHIVO)
         return res

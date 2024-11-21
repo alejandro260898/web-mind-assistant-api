@@ -103,7 +103,7 @@ class ChatBot():
         mejor_respuesta_idx = similitudes.argmax()
         mejor_respuesta = self.respuestas[mejor_respuesta_idx]
         
-        return respuesta_base
+        return mejor_respuesta
         
     def evaluar(self):
         for pregunta in self.preguntas_test:
@@ -112,5 +112,5 @@ class ChatBot():
         
 chat_bot = ChatBot()
 chat_bot.cargar()
-print(chat_bot.procesar('¿Qué sabes de la ansiedad?'))
+print(chat_bot.procesar('Sí, eso suena más manejable. Pero, ¿cómo puedo evitar distraerme mientras estudio?'))
 # chat_bot.evaluar()

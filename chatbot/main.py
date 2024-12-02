@@ -110,7 +110,5 @@ class ChatBot():
             print(self.procesar(pregunta))
             print('\n')
         
-chat_bot = ChatBot()
-chat_bot.cargar()
-print(chat_bot.procesar('Sí, eso suena más manejable. Pero, ¿cómo puedo evitar distraerme mientras estudio?'))
-# chat_bot.evaluar()
+# chat_bot = ChatBot()
+# chat_bot.cargar()

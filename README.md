@@ -3,6 +3,8 @@
 Crea tu entorno virtual con:
 
 ``` shell
+C:\Python\Python312\python.exe -m venv venv
+
 python -m venv venv
 ```
 
